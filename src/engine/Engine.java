@@ -145,6 +145,36 @@ public final class Engine {
 		return new Texture(icon.getImage());
     }
 
+	/**
+	 * Loads a resizable texture from the Assets directory. Supports the following formats: ??????
+	 * See the documentation for an explanation of what these parameters _actually_ mean.
+	 * @param path The path to the texture file, relative to the "assets" directory.
+	 * @param leftOffset The resize offset from the left of the texture (in pixels).
+	 * @param rightOffset The resize offset from the right of the texture (in pixels).
+	 * @param topOffset The resize offset from the top of the texture (in pixels).
+	 * @param bottomOffset The resize offset from the bottom of the texture (in pixels).
+	 * @return A resizable texture object.
+	 */
+    public static ResizableTexture loadResizableTexture(String path, int leftOffset, int rightOffset, int topOffset, int bottomOffset) {
+		ImageIcon icon = new ImageIcon(getAssetPath(path));
+		if (icon.getImageLoadStatus() != MediaTracker.COMPLETE) {
+			throw new Error("Failed to load texture.");
+		}
+
+		// Convert the relative offsets (from the edges) into absolute offsets (from the origin):
+		Image image = icon.getImage();
+		int width = image.getWidth(null);
+		int height = image.getHeight(null);
+        rightOffset = width - rightOffset - 1;
+        bottomOffset = height - bottomOffset - 1;
+
+        if (leftOffset < 0 || rightOffset >= width || topOffset < 0 || bottomOffset >= height || leftOffset > rightOffset || topOffset > bottomOffset) {
+            throw new Error("Invalid offset parameter.");
+        }
+
+        return new ResizableTexture(image, leftOffset, rightOffset, topOffset, bottomOffset);
+    }
+
 	// ======================================================================================
     // Primitive drawing
     // ======================================================================================
@@ -286,5 +316,44 @@ public final class Engine {
 		bufferGraphics.drawImage(texture.image, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
 		bufferGraphics.setTransform(oldTransform);
 	}
+
+	/**
+	 * Draws a resizable texture.
+	 * See the documentation for an explanation of how resizable textures work.
+	 * @param texture The resizable texture to draw.
+	 * @param bounds The bounds that the texture should be resized to.
+	 */
+    public static void drawResizableTexture(ResizableTexture texture, Bounds2 bounds) {
+        int bxmin = texture.leftOffset;
+        int bxmax = texture.rightOffset;
+        int bymin = texture.topOffset;
+        int bymax = texture.bottomOffset;
+        int txmax = texture.width;
+        int tymax = texture.height;
+        int px = (int)bounds.position.x;
+        int py = (int)bounds.position.y;
+        
+        // Don't let the overall size be so small that segment 9 has a negative size in either dimension:
+        int sx = Math.max((int)bounds.size.x, txmax - bxmax + bxmin);
+        int sy = Math.max((int)bounds.size.y, tymax - bymax + bymin);
+
+        // Draw each of the nine segments:
+		bufferGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        drawResizableTextureSegment(texture, 0, 0, bxmin, bymin, px, py, bxmin, bymin);
+        drawResizableTextureSegment(texture, bxmax, 0, txmax - bxmax, bymin, px + sx - (txmax - bxmax), py, txmax - bxmax, bymin);
+        drawResizableTextureSegment(texture, 0, bymax, bxmin, tymax - bymax, px, py + sy - (tymax - bymax), bxmin, tymax - bymax);
+        drawResizableTextureSegment(texture, bxmax, bymax, txmax - bxmax, tymax - bymax, px + sx - (txmax - bxmax), py + sy - (tymax - bymax), txmax - bxmax, tymax - bymax);
+        drawResizableTextureSegment(texture, bxmin, 0, bxmax - bxmin, bymin, px + bxmin, py, sx - bxmin - (txmax - bxmax), bymin);
+        drawResizableTextureSegment(texture, 0, bymin, bxmin, bymax - bymin, px, py + bymin, bxmin, sy - bymin - (tymax - bymax));
+        drawResizableTextureSegment(texture, bxmax, bymin, txmax - bxmax, bymax - bymin, px + sx - (txmax - bxmax), py + bymin, txmax - bxmax, sy - bymin - (tymax - bymax));
+        drawResizableTextureSegment(texture, bxmin, bymax, bxmax - bxmin, tymax - bymax, px + bxmin, py + sy - (tymax - bymax), sx - bxmin - (txmax - bxmax), tymax - bymax);
+        drawResizableTextureSegment(texture, bxmin, bymin, bxmax - bxmin, bymax - bymin, px + bxmin, py + bymin, sx - bxmin - (txmax - bxmax), sy - bymin - (tymax - bymax));
+    }
+
+	private static void drawResizableTextureSegment(ResizableTexture texture, int subtextureX, int subtextureY, int subtextureW, int subtextureH, int destX, int destY, int destW, int destH) {
+        if (subtextureW > 0 && subtextureH > 0) {
+			bufferGraphics.drawImage(texture.image, destX, destY, destX + destW, destY + destH, subtextureX, subtextureY, subtextureX + subtextureW, subtextureY + subtextureH, null);
+        }
+    }
 
 }
