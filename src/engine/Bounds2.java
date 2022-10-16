@@ -2,8 +2,8 @@ package engine;
 
 public class Bounds2 {
 
-    public final Vector2 Position;
-    public final Vector2 Size;
+    public final Vector2 position;
+    public final Vector2 size;
 
     /**
      * Creates a new 2D bounds rectangle.
@@ -11,8 +11,8 @@ public class Bounds2 {
      * @param size     The size of the bounds.
      */
     public Bounds2(Vector2 position, Vector2 size) {
-        Position = position;
-        Size = size;
+        this.position = position;
+        this.size = size;
     }
 
     /**
@@ -23,20 +23,20 @@ public class Bounds2 {
      * @param height The height of the bounds.
      */
     public Bounds2(float x, float y, float width, float height) {
-        Position = new Vector2(x, y);
-        Size = new Vector2(width, height);
+        position = new Vector2(x, y);
+        size = new Vector2(width, height);
     }
 
     public String toString() {
-        return String.format("(%s, %s)", Position.toString(), Size.toString());
+        return String.format("(%s, %s)", position.toString(), size.toString());
     }
 
     public Vector2 getMin() {
-        return Position;
+        return position;
     }
 
     public Vector2 getMax() {
-        return Position.add(Size);
+        return position.add(size);
     }
 
     /**

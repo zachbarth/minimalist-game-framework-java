@@ -1,0 +1,1 @@
+Place your assets (textures, sounds, and fonts) in this directory.
