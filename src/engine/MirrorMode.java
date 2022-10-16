@@ -1,6 +1,6 @@
 package engine;
 
-public enum TextureMirror {
+public enum MirrorMode {
     /**
      * Do not mirror the texture.
      */

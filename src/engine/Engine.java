@@ -2,7 +2,10 @@ package engine;
 
 import game.Game;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.*;
+
+import javax.sound.sampled.AudioFormat;
 import javax.swing.*;
 import java.nio.file.Paths;
 
@@ -37,14 +40,10 @@ public final class Engine {
 		bufferHeight = (int) Game.RESOLUTION.y;
 		bufferImage = new BufferedImage(bufferWidth, bufferHeight, BufferedImage.TYPE_INT_ARGB);
 		bufferGraphics = bufferImage.createGraphics();
+		bufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		bufferGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 		windowImage = new BufferedImage(bufferWidth, bufferHeight, BufferedImage.TYPE_INT_ARGB);
 		windowGraphics = windowImage.createGraphics();
-
-		// Configure render settings:
-		RenderingHints hints = new RenderingHints(null);
-		hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		bufferGraphics.addRenderingHints(hints);
 
 		// Create a window using Swing:
 		windowFrame = new JFrame();
@@ -128,8 +127,7 @@ public final class Engine {
     // Content loading
     // ======================================================================================
 
-	private static String getAssetPath(String path)
-    {
+	private static String getAssetPath(String path) {
         return Paths.get("assets", path).toAbsolutePath().toString();
     }
 
@@ -138,8 +136,7 @@ public final class Engine {
 	 * @param path The path to the texture file, relative to the "assets" directory.
 	 * @return A texture object.
 	 */
-    public static Texture loadTexture(String path)
-    {
+    public static Texture loadTexture(String path) {
 		ImageIcon icon = new ImageIcon(getAssetPath(path));
 		if (icon.getImageLoadStatus() != MediaTracker.COMPLETE) {
 			throw new Error("Failed to load texture.");
@@ -204,7 +201,7 @@ public final class Engine {
 	 * @param position The position where the texture will be drawn.
 	 */
 	public static void drawTexture(Texture texture, Vector2 position) {
-		drawTexture(texture, position, null, null, 0, null, TextureMirror.NONE, null, TextureScaleMode.LINEAR);
+		drawTexture(texture, position, null, null, 0, null, MirrorMode.NONE, null, InterpolationMode.LINEAR);
 	}
 
 	/**
@@ -217,10 +214,77 @@ public final class Engine {
 	 * @param pivot The offset from position to the pivot that the texture will be rotated about. If null, the center of the destination bounds will be used.
 	 * @param mirror The mirroring to apply to the texture. If you are unsure what to put here, use TextureMirror.NONE as a default value.
 	 * @param source The source bounds of the texture to draw. If null, the entire texture will be drawn.
-	 * @param scaleMode The scale mode to use when drawing the texture. If you are unsure what to put here, use TextureScaleMode.LINEAR as a default value.
+	 * @param interpolationMode The scale mode to use when drawing the texture. If you are unsure what to put here, use TextureScaleMode.LINEAR as a default value.
 	 */
-	public static void drawTexture(Texture texture, Vector2 position, Color color, Vector2 size, float rotation, Vector2 pivot, TextureMirror mirror, Bounds2 source, TextureScaleMode scaleMode) {
-		bufferGraphics.drawImage(texture.image, (int)position.x, (int)position.y, null);
+	public static void drawTexture(Texture texture, Vector2 position, Color color, Vector2 size, float rotation, Vector2 pivot, MirrorMode mirror, Bounds2 source, InterpolationMode interpolationMode) {
+		int dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2;
+		if (source != null) {
+            // Use the specified source coordinates:
+            sx1 = (int)source.position.x;
+            sy1 = (int)source.position.y;
+            sx2 = sx1 + (int)source.size.x;
+            sy2 = sy1 + (int)source.size.y;
+            dx1 = (int)position.x;
+            dy1 = (int)position.y;
+            dx2 = dx1 + sx2 - sx1;
+            dy2 = dy1 + sy2 - sy1;
+        } else {
+            // Use the full texture as the source:
+            sx1 = 0;
+            sy1 = 0;
+            sx2 = sx1 + texture.width;
+            sy2 = sy1 + texture.height;
+            dx1 = (int)position.x;
+            dy1 = (int)position.y;
+            dx2 = dx1 + texture.width;
+            dy2 = dy1 + texture.height;
+        }
+
+		// Apply the size override, if specified:
+        if (size != null) {
+            dx2 = dx1 + (int)size.x;
+            dy2 = dy1 + (int)size.y;
+        }
+
+		// Set the pivot to the center of the image, if unspecified:
+		Vector2 center = new Vector2((dx2 - dx1) / 2, (dy2 - dy1) / 2);
+        if (pivot == null) {
+			pivot = center;
+        }
+		
+		// Set the scale mode:
+		bufferGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
+			(interpolationMode == InterpolationMode.LINEAR) ? RenderingHints.VALUE_INTERPOLATION_BILINEAR : RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+		// Start building the transform relative to the draw position:
+		AffineTransform transform = new AffineTransform();
+		transform.translate(dx1, dy1);
+
+		// Rotate around the pivot:
+		transform.translate(pivot.x, pivot.y);
+		transform.rotate(Math.toRadians(rotation));
+		transform.translate(-pivot.x, -pivot.y);
+
+		// Mirror around the center, regardless of the pivot:
+		if (mirror != MirrorMode.NONE) {
+			transform.translate(center.x, center.y);
+			if (mirror == MirrorMode.HORIZONTAL || mirror == MirrorMode.BOTH) {
+				transform.scale(-1, 1);
+			}
+			if (mirror == MirrorMode.VERTICAL || mirror == MirrorMode.BOTH) {
+				transform.scale(1, -1);
+			}
+			transform.translate(-center.x, -center.y);
+		}
+
+		// Finish building the transform:
+		transform.translate(-dx1, -dy1);
+
+		// Draw the image:
+		AffineTransform oldTransform = bufferGraphics.getTransform();
+		bufferGraphics.setTransform(transform);
+		bufferGraphics.drawImage(texture.image, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
+		bufferGraphics.setTransform(oldTransform);
 	}
 
 }

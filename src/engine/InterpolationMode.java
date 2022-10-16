@@ -1,6 +1,6 @@
 package engine;
 
-public enum TextureScaleMode {
+public enum InterpolationMode {
     /**
      * Use a linear scale mode that interpolates between pixels for a smooth but blurry image.
      */
