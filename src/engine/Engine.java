@@ -231,22 +231,21 @@ public final class Engine {
 	 * @param position The position where the texture will be drawn.
 	 */
 	public static void drawTexture(Texture texture, Vector2 position) {
-		drawTexture(texture, position, null, null, 0, null, MirrorMode.NONE, null, InterpolationMode.LINEAR);
+		drawTexture(texture, position, null, 0, null, MirrorMode.NONE, null, InterpolationMode.LINEAR);
 	}
 
 	/**
 	 * Draws a texture.
 	 * @param texture The texture to draw.
 	 * @param position The position where the texture will be drawn.
-	 * @param color The color to multiply with the colors of the texture. If null, the colors of the texture will be unchanged.
 	 * @param size The destination size of the texture. If null, the original texture size will be used.
 	 * @param rotation The amount the texture will be rotated clockwise (in degrees). If zero, the texture will not be rotated.
 	 * @param pivot The offset from position to the pivot that the texture will be rotated about. If null, the center of the destination bounds will be used.
 	 * @param mirror The mirroring to apply to the texture. If you are unsure what to put here, use TextureMirror.NONE as a default value.
 	 * @param source The source bounds of the texture to draw. If null, the entire texture will be drawn.
-	 * @param interpolationMode The scale mode to use when drawing the texture. If you are unsure what to put here, use TextureScaleMode.LINEAR as a default value.
+	 * @param interpolationMode The interpolation mode to use when drawing the texture. If you are unsure what to put here, use TextureScaleMode.LINEAR as a default value.
 	 */
-	public static void drawTexture(Texture texture, Vector2 position, Color color, Vector2 size, float rotation, Vector2 pivot, MirrorMode mirror, Bounds2 source, InterpolationMode interpolationMode) {
+	public static void drawTexture(Texture texture, Vector2 position, Vector2 size, float rotation, Vector2 pivot, MirrorMode mirror, Bounds2 source, InterpolationMode interpolationMode) {
 		int dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2;
 		if (source != null) {
             // Use the specified source coordinates:
@@ -282,7 +281,7 @@ public final class Engine {
 			pivot = center;
         }
 		
-		// Set the scale mode:
+		// Set the interpolation mode:
 		bufferGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, 
 			(interpolationMode == InterpolationMode.LINEAR) ? RenderingHints.VALUE_INTERPOLATION_BILINEAR : RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
