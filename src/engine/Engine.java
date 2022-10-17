@@ -9,7 +9,7 @@ import java.util.*;
 import javax.swing.*;
 import java.nio.file.Paths;
 
-public final class Engine implements KeyListener {
+public final class Engine implements KeyListener, MouseListener, MouseMotionListener {
 
 	// Don't let the Engine class be instantiated:
 	private Engine() { }
@@ -23,6 +23,7 @@ public final class Engine implements KeyListener {
 	private static int bufferWidth, bufferHeight;
 	private static int windowFrameWidth, windowFrameHeight;
 	private static int windowFrameInitialWidth, windowFrameInitialHeight;
+	private static Vector2 scaledBufferSize, scaledBufferPos;
 	private static float timeDelta;
 	private static Game game;
 
@@ -33,6 +34,10 @@ public final class Engine implements KeyListener {
     private static TreeSet<Integer> keysHeld = new TreeSet<Integer>();
     private static TreeSet<Integer> keysUp = new TreeSet<Integer>();
     private static String typedText = "";
+	private static TreeSet<Integer> mouseButtonsDown = new TreeSet<Integer>();
+    private static TreeSet<Integer> mouseButtonsHeld = new TreeSet<Integer>();
+    private static TreeSet<Integer> mouseButtonsUp = new TreeSet<Integer>();
+	private static Vector2 mousePosition = Vector2.zero;
 
 	// ======================================================================================
     // Game loop
@@ -56,8 +61,8 @@ public final class Engine implements KeyListener {
 
 		// Create a window using Swing:
 		windowLabel = new JLabel(new ImageIcon(windowImage));
-		//windowLabel.addMouseListener(instance);
-        //windowLabel.addMouseMotionListener(instance);
+		windowLabel.addMouseListener(instance);
+        windowLabel.addMouseMotionListener(instance);
 		windowFrame = new JFrame();
 		windowFrame.setContentPane(windowLabel);
 		windowFrame.addKeyListener(instance);
@@ -68,7 +73,6 @@ public final class Engine implements KeyListener {
 		windowFrame.pack();
 		windowFrame.requestFocusInWindow();
 		windowFrame.setVisible(true);
-
 		windowFrameWidth = windowFrame.getWidth();
 		windowFrameHeight = windowFrame.getHeight();
 		windowFrameInitialWidth = windowFrameWidth;
@@ -117,9 +121,9 @@ public final class Engine implements KeyListener {
 			// Copy the render target to the screen:
 			windowGraphics.setColor(Color.BLACK);
 			windowGraphics.fillRect(0, 0, windowImageWidth, windowImageHeight);
-			Vector2 renderTargetSize = new Vector2(bufferWidth, bufferHeight).mul(renderTargetScale);
-			Vector2 renderTargetPos = new Vector2(windowImageWidth, windowImageHeight).sub(renderTargetSize).mul(0.5f);
-			windowGraphics.drawImage(bufferImage, (int)renderTargetPos.x, (int)renderTargetPos.y, (int)renderTargetSize.x, (int)renderTargetSize.y, null);
+			scaledBufferSize = new Vector2(bufferWidth, bufferHeight).mul(renderTargetScale);
+			scaledBufferPos = new Vector2(windowImageWidth, windowImageHeight).sub(scaledBufferSize).mul(0.5f);
+			windowGraphics.drawImage(bufferImage, (int)scaledBufferPos.x, (int)scaledBufferPos.y, (int)scaledBufferSize.x, (int)scaledBufferSize.y, null);
 			windowFrame.repaint();
 
 			// Wait until the next frame:
@@ -369,18 +373,19 @@ public final class Engine implements KeyListener {
     }
 
 	// ======================================================================================
-    // Keyboard input
+    // Keyboard and mouse input
     // ======================================================================================
 
     private class InputEvent {
         public final InputEventType type;
-        public final int keyCode;
-        public final char keyChar;
+        public final int button;
+		public final int x, y;
         
-        public InputEvent(InputEventType type, int keyCode, char keyChar) {
+        public InputEvent(InputEventType type, int param, int x, int y) {
             this.type = type;
-            this.keyCode = keyCode;
-            this.keyChar = keyChar;
+            this.button = param;
+			this.x = x;
+			this.y = y;
         }
     }
     
@@ -388,32 +393,70 @@ public final class Engine implements KeyListener {
         KEY_DOWN,
         KEY_UP,
         KEY_TYPED,
+		MOUSE_DOWN,
+		MOUSE_UP,
+		MOUSE_MOVE,
     }
 
     public void keyPressed(KeyEvent e) {
         synchronized (inputEvents) {
-            inputEvents.add(new InputEvent(InputEventType.KEY_DOWN, e.getKeyCode(), '\0'));
+            inputEvents.add(new InputEvent(InputEventType.KEY_DOWN, e.getKeyCode(), 0, 0));
         }
     }
 
     public void keyReleased(KeyEvent e) {
         synchronized (inputEvents) {
-            inputEvents.add(new InputEvent(InputEventType.KEY_UP, e.getKeyCode(), '\0'));
+            inputEvents.add(new InputEvent(InputEventType.KEY_UP, e.getKeyCode(), 0, 0));
         }
     }
 
     public void keyTyped(KeyEvent e) {
         synchronized (inputEvents) {
-            inputEvents.add(new InputEvent(InputEventType.KEY_TYPED, Key.UNDEFINED, e.getKeyChar()));
+            inputEvents.add(new InputEvent(InputEventType.KEY_TYPED, e.getKeyChar(), 0, 0));
+        }
+    }
+
+    public void mouseClicked(MouseEvent e) { }
+
+    public void mouseEntered(MouseEvent e) { }
+
+    public void mouseExited(MouseEvent e) { }
+
+    public void mousePressed(MouseEvent e) {
+        synchronized (inputEvents) {
+			inputEvents.add(new InputEvent(InputEventType.MOUSE_DOWN, e.getButton(), 0, 0));
+        }
+    }
+
+    public void mouseReleased(MouseEvent e) {
+        synchronized (inputEvents) {
+            inputEvents.add(new InputEvent(InputEventType.MOUSE_UP, e.getButton(), 0, 0));
+        }
+    }
+
+    public void mouseDragged(MouseEvent e)  {
+        mouseMoved(e);
+    }
+
+    public void mouseMoved(MouseEvent e) {
+        synchronized (inputEvents) {
+            inputEvents.add(new InputEvent(InputEventType.MOUSE_MOVE, 0, e.getX(), e.getY()));
         }
     }
     
+	private static float remapLerpClamped(float x, float a, float b, float c, float d)
+    {
+        return c + (d - c) * Math.max(0, Math.min(1, (x - a) / (b - a)));
+    }
+
     private static void pollEvents() {
         // Reset per-frame input flags:
         keysDown.clear();
         keysDownAutorepeat.clear();
         keysUp.clear();
         typedText = "";
+		mouseButtonsDown.clear();
+		mouseButtonsUp.clear();
 
         // Process new events:
         synchronized (inputEvents) {
@@ -421,16 +464,29 @@ public final class Engine implements KeyListener {
                 InputEvent event = inputEvents.get(i);
                 switch (event.type) {
                     case KEY_DOWN:
-                        keysDown.add(event.keyCode);
-                        keysHeld.add(event.keyCode);
+                        keysDown.add(event.button);
+                        keysHeld.add(event.button);
                         break;
                     case KEY_UP:
-                        keysUp.add(event.keyCode);
-                        keysHeld.remove(event.keyCode);
+                        keysUp.add(event.button);
+                        keysHeld.remove(event.button);
                         break;
                     case KEY_TYPED:
-                        typedText += event.keyChar;
+                        typedText += (char)event.button;
                         break;
+					case MOUSE_DOWN:
+						mouseButtonsDown.add(event.button);
+						mouseButtonsHeld.add(event.button);
+						break;
+					case MOUSE_UP:
+						mouseButtonsUp.add(event.button);
+						mouseButtonsHeld.remove(event.button);
+						break;
+					case MOUSE_MOVE:
+						mousePosition = new Vector2(
+							(int)remapLerpClamped(event.x, scaledBufferPos.x, scaledBufferPos.x + scaledBufferSize.x, 0, bufferWidth),
+							(int)remapLerpClamped(event.y, scaledBufferPos.y, scaledBufferPos.y + scaledBufferSize.y, 0, bufferHeight));
+						break;
                 }
             }
             inputEvents.clear();
@@ -464,8 +520,39 @@ public final class Engine implements KeyListener {
     /**
      * @return The textual representation of the keys that were pressed this frame.
      */
-    public static String typedText() {
+    public static String getTypedText() {
         return typedText;
     }
+
+	/**
+	 * @param button The mouse button to query.
+	 * @return Whether or not a mouse button was pressed down this frame.
+	 */
+    public static boolean getMouseButtonDown(int button) {
+        return mouseButtonsDown.contains(button);
+    }
+
+    /**
+	 * @param button The mouse button to query.
+	 * @return Whether or not a mouse button was held during this frame.
+	 */
+    public static boolean getMouseButtonHeld(int button) {
+        return mouseButtonsHeld.contains(button);
+    }
+
+	/**
+	 * @param button The mouse button to query.
+	 * @return Whether or not a mouse button was released this frame.
+	 */
+    public static boolean getMouseButtonUp(int button) {
+        return mouseButtonsUp.contains(button);
+    }
+
+	/**
+	 * @return The current position of the mouse cursor (in pixels).
+	 */
+	public static Vector2 getMousePosition() {
+		return mousePosition;
+	}
 
 }
