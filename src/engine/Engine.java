@@ -2,19 +2,20 @@ package engine;
 
 import game.Game;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
+import java.awt.event.*;
 import java.awt.image.*;
-
-import javax.sound.sampled.AudioFormat;
+import java.awt.geom.AffineTransform;
+import java.util.*;
 import javax.swing.*;
 import java.nio.file.Paths;
 
-public final class Engine {
+public final class Engine implements KeyListener {
 
 	// Don't let the Engine class be instantiated:
 	private Engine() { }
 
 	// Game loop variables:
+	private static Engine instance = new Engine();
 	private static JFrame windowFrame;
 	private static JLabel windowLabel;
 	private static BufferedImage bufferImage, windowImage;
@@ -24,6 +25,14 @@ public final class Engine {
 	private static int windowFrameInitialWidth, windowFrameInitialHeight;
 	private static float timeDelta;
 	private static Game game;
+
+	// Input variables:
+	private static ArrayList<InputEvent> inputEvents = new ArrayList<InputEvent>();
+	private static TreeSet<Integer> keysDown = new TreeSet<Integer>();
+    private static TreeSet<Integer> keysDownAutorepeat = new TreeSet<Integer>();
+    private static TreeSet<Integer> keysHeld = new TreeSet<Integer>();
+    private static TreeSet<Integer> keysUp = new TreeSet<Integer>();
+    private static String typedText = "";
 
 	// ======================================================================================
     // Game loop
@@ -46,9 +55,12 @@ public final class Engine {
 		windowGraphics = windowImage.createGraphics();
 
 		// Create a window using Swing:
-		windowFrame = new JFrame();
 		windowLabel = new JLabel(new ImageIcon(windowImage));
+		//windowLabel.addMouseListener(instance);
+        //windowLabel.addMouseMotionListener(instance);
+		windowFrame = new JFrame();
 		windowFrame.setContentPane(windowLabel);
+		windowFrame.addKeyListener(instance);
 		windowFrame.setFocusTraversalKeysEnabled(false);
 		windowFrame.setResizable(true);
 		windowFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -56,6 +68,7 @@ public final class Engine {
 		windowFrame.pack();
 		windowFrame.requestFocusInWindow();
 		windowFrame.setVisible(true);
+
 		windowFrameWidth = windowFrame.getWidth();
 		windowFrameHeight = windowFrame.getHeight();
 		windowFrameInitialWidth = windowFrameWidth;
@@ -74,7 +87,7 @@ public final class Engine {
 			lastFrameStart = frameStart;
 
 			// // Process pre-update engine logic:
-			// pollEvents();
+			pollEvents();
 
 			// Clear and start drawing into the render target:
 			bufferGraphics.setColor(Color.BLACK);
@@ -353,6 +366,106 @@ public final class Engine {
         if (subtextureW > 0 && subtextureH > 0) {
 			bufferGraphics.drawImage(texture.image, destX, destY, destX + destW, destY + destH, subtextureX, subtextureY, subtextureX + subtextureW, subtextureY + subtextureH, null);
         }
+    }
+
+	// ======================================================================================
+    // Keyboard input
+    // ======================================================================================
+
+    private class InputEvent {
+        public final InputEventType type;
+        public final int keyCode;
+        public final char keyChar;
+        
+        public InputEvent(InputEventType type, int keyCode, char keyChar) {
+            this.type = type;
+            this.keyCode = keyCode;
+            this.keyChar = keyChar;
+        }
+    }
+    
+    private enum InputEventType {
+        KEY_DOWN,
+        KEY_UP,
+        KEY_TYPED,
+    }
+
+    public void keyPressed(KeyEvent e) {
+        synchronized (inputEvents) {
+            inputEvents.add(new InputEvent(InputEventType.KEY_DOWN, e.getKeyCode(), '\0'));
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+        synchronized (inputEvents) {
+            inputEvents.add(new InputEvent(InputEventType.KEY_UP, e.getKeyCode(), '\0'));
+        }
+    }
+
+    public void keyTyped(KeyEvent e) {
+        synchronized (inputEvents) {
+            inputEvents.add(new InputEvent(InputEventType.KEY_TYPED, Key.UNDEFINED, e.getKeyChar()));
+        }
+    }
+    
+    private static void pollEvents() {
+        // Reset per-frame input flags:
+        keysDown.clear();
+        keysDownAutorepeat.clear();
+        keysUp.clear();
+        typedText = "";
+
+        // Process new events:
+        synchronized (inputEvents) {
+            for (int i = 0; i < inputEvents.size(); i++) {
+                InputEvent event = inputEvents.get(i);
+                switch (event.type) {
+                    case KEY_DOWN:
+                        keysDown.add(event.keyCode);
+                        keysHeld.add(event.keyCode);
+                        break;
+                    case KEY_UP:
+                        keysUp.add(event.keyCode);
+                        keysHeld.remove(event.keyCode);
+                        break;
+                    case KEY_TYPED:
+                        typedText += event.keyChar;
+                        break;
+                }
+            }
+            inputEvents.clear();
+        }
+    }
+    
+    /**
+     * @param key The key to query.
+     * @return Whether or not a key was pressed down this frame.
+     */
+    public static boolean getKeyDown(int key) {
+        return keysDown.contains(key);
+    }
+    
+    /**
+     * @param key The key to query.
+     * @return Whether or not a key was held during this frame.
+     */
+    public static boolean getKeyHeld(int key) {
+        return keysHeld.contains(key);
+    }
+    
+    /**
+     * @param key The key to query.
+     * @return Whether or not a key was released this frame.
+     */
+    public static boolean getKeyUp(int key) {
+        return keysUp.contains(key);
+    }
+    
+    /**
+     * @return The textual representation of the keys that were pressed this frame.
+     */
+    public static String typedText() {
+        return typedText;
     }
 
 }
