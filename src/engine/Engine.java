@@ -508,24 +508,24 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
      * @param key The key to query.
      * @return Whether or not a key was pressed down this frame.
      */
-    public static boolean getKeyDown(int key) {
-        return keysDown.contains(key);
+    public static boolean getKeyDown(Key key) {
+        return keysDown.contains(key.getValue());
     }
     
     /**
      * @param key The key to query.
      * @return Whether or not a key was held during this frame.
      */
-    public static boolean getKeyHeld(int key) {
-        return keysHeld.contains(key);
+    public static boolean getKeyHeld(Key key) {
+        return keysHeld.contains(key.getValue());
     }
     
     /**
      * @param key The key to query.
      * @return Whether or not a key was released this frame.
      */
-    public static boolean getKeyUp(int key) {
-        return keysUp.contains(key);
+    public static boolean getKeyUp(Key key) {
+        return keysUp.contains(key.getValue());
     }
     
     /**
@@ -539,24 +539,24 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 * @param button The mouse button to query.
 	 * @return Whether or not a mouse button was pressed down this frame.
 	 */
-    public static boolean getMouseButtonDown(int button) {
-        return mouseButtonsDown.contains(button);
+    public static boolean getMouseButtonDown(MouseButton button) {
+        return mouseButtonsDown.contains(button.getValue());
     }
 
     /**
 	 * @param button The mouse button to query.
 	 * @return Whether or not a mouse button was held during this frame.
 	 */
-    public static boolean getMouseButtonHeld(int button) {
-        return mouseButtonsHeld.contains(button);
+    public static boolean getMouseButtonHeld(MouseButton button) {
+        return mouseButtonsHeld.contains(button.getValue());
     }
 
 	/**
 	 * @param button The mouse button to query.
 	 * @return Whether or not a mouse button was released this frame.
 	 */
-    public static boolean getMouseButtonUp(int button) {
-        return mouseButtonsUp.contains(button);
+    public static boolean getMouseButtonUp(MouseButton button) {
+        return mouseButtonsUp.contains(button.getValue());
     }
 
 	/**

@@ -1,20 +1,27 @@
 package engine;
 
-public final class MouseButton {
-    
-    // Don't let the Key class be instantiated:
-    private MouseButton() { }
+public enum MouseButton {
 
     /** Constant for the left mouse button. */
-    public static final int LEFT = 1;
+    LEFT(1),
     
     /** Constant for the middle mouse button. */
-    public static final int MIDDLE = 2;
+    MIDDLE(2),
 
     /** Constant for the right mouse button. */
-    public static final int RIGHT = 3;
+    RIGHT(3),
 
     /** Constant for the back mouse button. */
-    public static final int BACK = 4;
+    BACK(4);
+
+    private final int value;
+
+    MouseButton(int value) {
+        this.value = value;
+    }
+
+    public int getValue() { 
+        return value; 
+    }
 
 }
