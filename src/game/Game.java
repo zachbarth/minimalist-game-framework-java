@@ -29,20 +29,25 @@ public class Game {
         
         // Use the keyboard to control the knight:
 		Vector2 moveOffset = Vector2.zero;
-		if (Engine.getKeyHeld(Key.LEFT)) moveOffset = moveOffset.add(new Vector2(-1, 0));
-		if (Engine.getKeyHeld(Key.RIGHT)) moveOffset = moveOffset.add(new Vector2(1, 0));
-		if (Engine.getKeyHeld(Key.UP)) moveOffset = moveOffset.add(new Vector2(0, -1));
-		if (Engine.getKeyHeld(Key.DOWN)) moveOffset = moveOffset.add(new Vector2(0, 1));
-
-        boolean knightIdle = moveOffset.length() == 0;
-        if (!knightIdle)
-        {
-            knightPosition = knightPosition.add(moveOffset.mul(WALKSPEED * Engine.timeDelta()));
-            knightFaceLeft = moveOffset.x < 0;
-        }
-
+		if (Engine.getKeyHeld(Key.LEFT)) {
+	        moveOffset = moveOffset.add(new Vector2(-1, 0));
+	        knightFaceLeft = true;
+	    }
+		if (Engine.getKeyHeld(Key.RIGHT)) {
+		    moveOffset = moveOffset.add(new Vector2(1, 0));
+		    knightFaceLeft = false;
+		}
+		if (Engine.getKeyHeld(Key.UP)) {
+		    moveOffset = moveOffset.add(new Vector2(0, -1));
+		}
+		if (Engine.getKeyHeld(Key.DOWN)) {
+		    moveOffset = moveOffset.add(new Vector2(0, 1));
+		}
+		knightPosition = knightPosition.add(moveOffset.mul(WALKSPEED * Engine.timeDelta()));
+        
         // Advance through the knight's 6-frame animation and select the current frame:
         knightFrameIndex = (knightFrameIndex + FRAMERATE * Engine.timeDelta()) % 6.0f;
+        boolean knightIdle = moveOffset.length() == 0;
         Bounds2 knightFrameBounds = new Bounds2(((int)knightFrameIndex) * 16, knightIdle ? 0 : 16, 16, 16);
 
         // Draw the knight:
