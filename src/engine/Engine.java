@@ -9,7 +9,7 @@ import java.util.*;
 import javax.swing.*;
 import java.nio.file.Paths;
 
-public final class Engine implements KeyListener, MouseListener, MouseMotionListener {
+public final class Engine implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
 	// Don't let the Engine class be instantiated:
 	private Engine() { }
@@ -38,6 +38,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
     private static TreeSet<Integer> mouseButtonsHeld = new TreeSet<Integer>();
     private static TreeSet<Integer> mouseButtonsUp = new TreeSet<Integer>();
 	private static Vector2 mousePosition = Vector2.zero;
+	private static int mouseScroll = 0;
 
 	// ======================================================================================
     // Game loop
@@ -396,6 +397,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 		MOUSE_DOWN,
 		MOUSE_UP,
 		MOUSE_MOVE,
+		MOUSE_SCROLL,
     }
 
     public void keyPressed(KeyEvent e) {
@@ -443,9 +445,14 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
             inputEvents.add(new InputEvent(InputEventType.MOUSE_MOVE, 0, e.getX(), e.getY()));
         }
     }
+
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		synchronized (inputEvents) {
+			inputEvents.add(new InputEvent(InputEventType.MOUSE_SCROLL, 0, 0, e.getWheelRotation()));
+		}
+    }
     
-	private static float remapLerpClamped(float x, float a, float b, float c, float d)
-    {
+	private static float remapLerpClamped(float x, float a, float b, float c, float d) {
         return c + (d - c) * Math.max(0, Math.min(1, (x - a) / (b - a)));
     }
 
@@ -457,6 +464,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
         typedText = "";
 		mouseButtonsDown.clear();
 		mouseButtonsUp.clear();
+		mouseScroll = 0;
 
         // Process new events:
         synchronized (inputEvents) {
@@ -486,6 +494,9 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 						mousePosition = new Vector2(
 							(int)remapLerpClamped(event.x, scaledBufferPos.x, scaledBufferPos.x + scaledBufferSize.x, 0, bufferWidth),
 							(int)remapLerpClamped(event.y, scaledBufferPos.y, scaledBufferPos.y + scaledBufferSize.y, 0, bufferHeight));
+						break;
+					case MOUSE_SCROLL:
+						mouseScroll += event.y;
 						break;
                 }
             }
@@ -553,6 +564,13 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 */
 	public static Vector2 getMousePosition() {
 		return mousePosition;
+	}
+
+	/**
+	 * @return The amount the mouse wheel has been scrolled this frame (in scroll units).
+	 */
+	public static int getMouseScroll() {
+		return mouseScroll;
 	}
 
 }
