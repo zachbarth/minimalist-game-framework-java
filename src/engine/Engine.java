@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.awt.geom.AffineTransform;
+import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import java.nio.file.Paths;
@@ -164,7 +165,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
     }
 
 	/**
-	 * Loads a resizable texture from the Assets directory. Supports the following formats: ??????
+	 * Loads a resizable texture from the "assets" directory. Supports the following formats: ??????
 	 * See the documentation for an explanation of what these parameters _actually_ mean.
 	 * @param path The path to the texture file, relative to the "assets" directory.
 	 * @param leftOffset The resize offset from the left of the texture (in pixels).
@@ -192,6 +193,22 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 
         return new ResizableTexture(image, leftOffset, rightOffset, topOffset, bottomOffset);
     }
+
+	/**
+	 * Loads a font from the Assets directory for a single text size. Supports the following formats: TTF.
+	 * @param path The path to the font file, relative to the "assets"" directory.
+	 * @param pointSize The size of the text that will be rendered by this font (in points).
+	 */
+	public static Font loadFont(String path, int pointSize) {
+	    try {
+    	    File file = new File(getAssetPath(path));
+    		java.awt.Font font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, file).deriveFont(pointSize);
+    		GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font);
+    		return new Font(font);
+	    } catch (Exception e) {
+	        throw new Error("Failed to load font.");
+	    }
+	}
 
 	// ======================================================================================
     // Primitive drawing
