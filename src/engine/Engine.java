@@ -1,14 +1,16 @@
 package engine;
 
 import game.Game;
+
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
 import java.awt.geom.AffineTransform;
+import java.awt.image.*;
 import java.io.*;
-import java.util.*;
-import javax.swing.*;
 import java.nio.file.Paths;
+import java.util.*;
+import javax.sound.sampled.*;
+import javax.swing.*;
 
 public final class Engine implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -152,7 +154,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
     }
 
 	/**
-	 * Loads a texture from the "assets" directory. Supports the following formats: ??????
+	 * Loads a texture from the "assets" directory. Supports the following formats: PNG, GIF, JPEG.
 	 * @param path The path to the texture file, relative to the "assets" directory.
 	 * @return A texture object.
 	 */
@@ -166,7 +168,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
     }
 
 	/**
-	 * Loads a resizable texture from the "assets" directory. Supports the following formats: ??????
+	 * Loads a resizable texture from the "assets" directory. Supports the following formats: PNG, GIF, JPEG.
 	 * See the documentation for an explanation of what these parameters _actually_ mean.
 	 * @param path The path to the texture file, relative to the "assets" directory.
 	 * @param leftOffset The resize offset from the left of the texture (in pixels).
@@ -196,9 +198,10 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
     }
 
 	/**
-	 * Loads a font from the Assets directory for a single text size. Supports the following formats: TTF.
-	 * @param path The path to the font file, relative to the "assets"" directory.
+	 * Loads a font from the "assets" directory for a single text size. Supports the following formats: TTF, OTF.
+	 * @param path The path to the font file, relative to the "assets" directory.
 	 * @param pointSize The size of the text that will be rendered by this font (in points).
+	 * @return A font object.
 	 */
 	public static Font loadFont(String path, float pointSize) {
 	    try {
