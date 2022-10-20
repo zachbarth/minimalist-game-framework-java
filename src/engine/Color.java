@@ -2,7 +2,7 @@ package engine;
 
 public class Color {
     
-    public final java.awt.Color color;
+    protected final java.awt.Color color;
 
     public Color(int r, int g, int b) {
         this(r, g, b, 0xFF);
@@ -11,6 +11,11 @@ public class Color {
     public Color(int r, int g, int b, int a) {
         this.color = new java.awt.Color(r, g, b, a);
     }
+
+    public int getR() { return color.getRed(); }
+    public int getG() { return color.getGreen(); }
+    public int getB() { return color.getBlue(); }
+    public int getA() { return color.getAlpha(); }
 
     /**
      * @param scale The scale factor to apply to the original alpha, between 0 and 1.

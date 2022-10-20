@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class Texture {
     
-    public final Image image;
+    protected final Image image;
     public final int width, height;
     public final Vector2 size;
 

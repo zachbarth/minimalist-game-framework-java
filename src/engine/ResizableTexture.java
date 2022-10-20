@@ -4,9 +4,9 @@ import java.awt.*;
 
 public class ResizableTexture {
     
-    public final Image image;
+    protected final Image image;
     public final int width, height;
-    public final int leftOffset, rightOffset, topOffset, bottomOffset;
+    protected final int leftOffset, rightOffset, topOffset, bottomOffset;
 
     public ResizableTexture(Image image, int leftOffset, int rightOffset, int topOffset, int bottomOffset) {
         this.image = image;
