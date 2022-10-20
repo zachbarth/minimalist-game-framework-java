@@ -200,7 +200,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 * @param path The path to the font file, relative to the "assets"" directory.
 	 * @param pointSize The size of the text that will be rendered by this font (in points).
 	 */
-	public static Font loadFont(String path, int pointSize) {
+	public static Font loadFont(String path, float pointSize) {
 	    try {
     	    File file = new File(getAssetPath(path));
     		java.awt.Font font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, file).deriveFont(pointSize);
