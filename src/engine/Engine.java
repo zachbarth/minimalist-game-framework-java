@@ -97,7 +97,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 			pollEvents();
 
 			// Clear and start drawing into the render target:
-			bufferGraphics.setColor(Color.BLACK);
+			bufferGraphics.setColor(Color.BLACK.color);
 			bufferGraphics.fillRect(0, 0, bufferWidth, bufferHeight);
 
 			// Update game logic:
@@ -122,7 +122,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 				: (float)windowImageWidth / bufferWidth;
 
 			// Copy the render target to the screen:
-			windowGraphics.setColor(Color.BLACK);
+			windowGraphics.setColor(Color.BLACK.color);
 			windowGraphics.fillRect(0, 0, windowImageWidth, windowImageHeight);
 			scaledBufferSize = new Vector2(bufferWidth, bufferHeight).mul(renderTargetScale);
 			scaledBufferPos = new Vector2(windowImageWidth, windowImageHeight).sub(scaledBufferSize).mul(0.5f);
@@ -222,7 +222,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 * @param color The color of the line.
 	 */
     public static void drawLine(Vector2 start, Vector2 end, Color color) {
-		bufferGraphics.setColor(color);
+		bufferGraphics.setColor(color.color);
 		bufferGraphics.drawLine((int)start.x, (int)start.y, (int)end.x, (int)end.y);
     }
 
@@ -233,7 +233,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 * @param filled Whether or not the rectangle should be filled.
 	 */
     public static void drawRect(Bounds2 bounds, Color color, boolean filled) {
-		bufferGraphics.setColor(color);
+		bufferGraphics.setColor(color.color);
 		if (filled) {
 			bufferGraphics.fillRect((int)bounds.position.x, (int)bounds.position.y, (int)bounds.size.x, (int)bounds.size.y);
 		} else {
@@ -249,7 +249,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 * @param filled Whether or not the circle should be filled.
 	 */
     public static void drawCircle(Vector2 center, float radius, Color color, boolean filled) {
-		bufferGraphics.setColor(color);
+		bufferGraphics.setColor(color.color);
 		if (filled) {
 			bufferGraphics.fillOval((int)(center.x - radius), (int)(center.y - radius), (int)(radius * 2), (int)(radius * 2));
 		} else {
@@ -436,7 +436,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 
         // If we're not only measuring the text, draw it:
         if (!measureOnly) {
-			bufferGraphics.setColor(color);
+			bufferGraphics.setColor(color.color);
 			if (rotation != 0) {
 				bufferGraphics.rotate(Math.toRadians(rotation), position.x, position.y);
 			}
@@ -529,8 +529,12 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 		}
     }
     
-	private static float remapLerpClamped(float x, float a, float b, float c, float d) {
-        return c + (d - c) * Math.max(0, Math.min(1, (x - a) / (b - a)));
+	public static float clamp(float x, float min, float max) {
+		return Math.max(min, Math.min(max, x));
+	}
+
+	public static float remapLerpClamped(float x, float a, float b, float c, float d) {
+        return c + (d - c) * clamp((x - a) / (b - a), 0, 1);
     }
 
     private static void pollEvents() {
