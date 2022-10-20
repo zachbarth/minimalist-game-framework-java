@@ -392,6 +392,65 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
     }
 
 	// ======================================================================================
+    // Text drawing
+    // ======================================================================================
+
+	/**
+	 * Draws a left-aligned text string.
+	 * @param text The text to draw.
+	 * @param position The position where the text will be drawn.
+	 * @param color The color of the text.
+	 * @param font The font to use to draw the text.
+	 * @return The bounds of the drawn text.
+	 */
+    public static Bounds2 drawString(String text, Vector2 position, Color color, Font font) {
+		return drawString(text, position, color, font, TextAlignment.LEFT, 0, false);
+	}
+
+	/**
+	 * Draws a text string.
+	 * @param text The text to draw.
+	 * @param position The position where the text will be drawn.
+	 * @param color The color of the text.
+	 * @param font The font to use to draw the text.
+	 * @param alignment The alignment of the text relative to the position. If unspecified the text will be drawn left-aligned.
+	 * @param rotation The amount the texture will be rotated clockwise (in degrees). The bounds of rotated text will not be correct.
+	 * @param measureOnly If true the text will only be measured and not actually drawn to the screen.
+	 * @return The bounds of the drawn text.
+	 */
+    public static Bounds2 drawString(String text, Vector2 position, Color color, Font font, TextAlignment alignment, float rotation, boolean measureOnly) {
+		// Query the text dimensions:
+		bufferGraphics.setFont(font.font);
+		FontMetrics metrics = bufferGraphics.getFontMetrics();
+		int width = metrics.stringWidth(text);
+		int height = metrics.getHeight();
+		int descent = metrics.getDescent();
+
+        // Apply text alignment relative to the draw position:
+		Vector2 drawPosition = position;
+        if (alignment == TextAlignment.CENTER) {
+			drawPosition = drawPosition.add(new Vector2(-width / 2, 0));
+        } else if (alignment == TextAlignment.RIGHT) {
+			drawPosition = drawPosition.add(new Vector2(-width, 0));
+        }
+
+        // If we're not only measuring the text, draw it:
+        if (!measureOnly) {
+			bufferGraphics.setColor(color);
+			if (rotation != 0) {
+				bufferGraphics.rotate(Math.toRadians(rotation), position.x, position.y);
+			}
+            bufferGraphics.drawString(text, drawPosition.x, drawPosition.y);
+			if (rotation != 0) {
+				bufferGraphics.rotate(Math.toRadians(-rotation), position.x, position.y);
+			}
+        }
+
+        // Return the bounds of the text:
+        return new Bounds2(drawPosition.add(new Vector2(0, descent - height)), new Vector2(width, height));
+    }
+
+	// ======================================================================================
     // Keyboard and mouse input
     // ======================================================================================
 
