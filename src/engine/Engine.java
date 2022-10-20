@@ -24,7 +24,8 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	private static int bufferWidth, bufferHeight;
 	private static int windowFrameWidth, windowFrameHeight;
 	private static int windowFrameInitialWidth, windowFrameInitialHeight;
-	private static Vector2 scaledBufferSize, scaledBufferPos;
+	private static Vector2 scaledBufferSize = Vector2.zero;
+	private static Vector2 scaledBufferPos = Vector2.zero;
 	private static float timeDelta;
 	private static Game game;
 
