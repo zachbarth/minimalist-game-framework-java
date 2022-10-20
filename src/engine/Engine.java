@@ -214,6 +214,22 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	    }
 	}
 
+	/**
+	 * Loads a sound file from the "assets" directory. Supports the following formats: WAV.
+	 * @param path The path to the sound file, relative to the "assets" directory.
+	 * @return A sound object.
+	 */
+	public static Sound loadSound(String path) {
+		try {
+			File file = new File(getAssetPath(path));
+			// Make sure that we can read the stream here, even though we do it from scratch every time we play the sound:
+			AudioInputStream stream = AudioSystem.getAudioInputStream(file);
+			return new Sound(file);
+		} catch (Exception e) {
+	        throw new Error("Failed to load sound.");
+		}
+    }
+
 	// ======================================================================================
     // Primitive drawing
     // ======================================================================================
@@ -655,6 +671,38 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	 */
 	public static int getMouseScroll() {
 		return mouseScroll;
+	}
+
+	// ======================================================================================
+    // Sound playback
+    // ======================================================================================
+
+	/**
+	 * Plays a sound.
+	 * @param sound The sound to play.
+	 * @param repeat Whether or not the sound should repeat until stopped.
+	 * @return An instance handle that can be passed to stopSound() to stop playback of the sound.
+	 */
+	public static SoundInstance playSound(Sound sound, boolean repeat) {
+		try {
+			Clip clip = AudioSystem.getClip();
+			clip.open(AudioSystem.getAudioInputStream(sound.file));
+			clip.start();
+			if (repeat) {
+				clip.loop(Clip.LOOP_CONTINUOUSLY);
+			}
+			return new SoundInstance(clip);
+		} catch (Exception e) {
+	        throw new Error("Failed to play sound.");
+		}
+	}
+
+	/**
+	 * Stops a playing sound.
+	 * @param instance An instance handle from a prior call to playSound().
+	 */
+	public static void stopSound(SoundInstance instance) {
+		instance.clip.stop();
 	}
 
 }
