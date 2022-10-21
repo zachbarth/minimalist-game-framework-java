@@ -68,6 +68,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 		windowLabel = new JLabel(new ImageIcon(windowImage));
 		windowLabel.addMouseListener(instance);
         windowLabel.addMouseMotionListener(instance);
+		windowLabel.addMouseWheelListener(instance);
 		windowFrame = new JFrame();
 		windowFrame.setContentPane(windowLabel);
 		windowFrame.addKeyListener(instance);
