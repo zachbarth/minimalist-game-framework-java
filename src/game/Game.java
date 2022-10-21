@@ -4,9 +4,9 @@ import engine.*;
 
 public class Game {
 
-	public static final String WINDOW_TITLE = "Minimalist Game Framework";
+    public static final String WINDOW_TITLE = "Minimalist Game Framework";
     public static final int WINDOW_SCALE = 3;
-	public static final Vector2 RESOLUTION = new Vector2(128, 128);
+    public static final Vector2 RESOLUTION = new Vector2(128, 128);
 
     // Define some constants controlling animation speed:
     static final float FRAMERATE = 10;
@@ -29,22 +29,22 @@ public class Game {
         Engine.drawTexture(texBackground, Vector2.zero);
         
         // Use the keyboard to control the knight:
-		Vector2 moveOffset = Vector2.zero;
-		if (Engine.getKeyHeld(Key.LEFT)) {
-	        moveOffset = moveOffset.add(new Vector2(-1, 0));
-	        knightFaceLeft = true;
-	    }
-		if (Engine.getKeyHeld(Key.RIGHT)) {
-		    moveOffset = moveOffset.add(new Vector2(1, 0));
-		    knightFaceLeft = false;
-		}
-		if (Engine.getKeyHeld(Key.UP)) {
-		    moveOffset = moveOffset.add(new Vector2(0, -1));
-		}
-		if (Engine.getKeyHeld(Key.DOWN)) {
-		    moveOffset = moveOffset.add(new Vector2(0, 1));
-		}
-		knightPosition = knightPosition.add(moveOffset.mul(WALKSPEED * Engine.getTimeDelta()));
+        Vector2 moveOffset = Vector2.zero;
+        if (Engine.getKeyHeld(Key.LEFT)) {
+            moveOffset = moveOffset.add(new Vector2(-1, 0));
+            knightFaceLeft = true;
+        }
+        if (Engine.getKeyHeld(Key.RIGHT)) {
+            moveOffset = moveOffset.add(new Vector2(1, 0));
+            knightFaceLeft = false;
+        }
+        if (Engine.getKeyHeld(Key.UP)) {
+            moveOffset = moveOffset.add(new Vector2(0, -1));
+        }
+        if (Engine.getKeyHeld(Key.DOWN)) {
+            moveOffset = moveOffset.add(new Vector2(0, 1));
+        }
+        knightPosition = knightPosition.add(moveOffset.mul(WALKSPEED * Engine.getTimeDelta()));
         
         // Advance through the knight's 6-frame animation and select the current frame:
         knightFrameIndex = (knightFrameIndex + FRAMERATE * Engine.getTimeDelta()) % 6.0f;
@@ -54,7 +54,7 @@ public class Game {
         // Draw the knight:
         Vector2 knightDrawPos = knightPosition.add(new Vector2(-8, -8));
         MirrorMode knightMirror = knightFaceLeft ? MirrorMode.HORIZONTAL : MirrorMode.NONE;
-		Engine.drawTexture(texKnight, knightDrawPos, null, 0, null, knightMirror, knightFrameBounds, InterpolationMode.LINEAR);
+        Engine.drawTexture(texKnight, knightDrawPos, null, 0, null, knightMirror, knightFrameBounds, InterpolationMode.LINEAR);
     }
 
 }
