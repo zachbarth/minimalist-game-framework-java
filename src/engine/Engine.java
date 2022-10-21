@@ -27,6 +27,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	private static Vector2 scaledBufferSize = Vector2.zero;
 	private static Vector2 scaledBufferPos = Vector2.zero;
 	private static float timeDelta;
+	private static boolean fullscreen;
 	private static Game game;
 
 	// Input variables:
@@ -52,17 +53,41 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	}
 
 	private static void start() {
-		// Create our render targets:
-		bufferWidth = (int) Game.RESOLUTION.x;
-		bufferHeight = (int) Game.RESOLUTION.y;
+		// Create an initial window:
+		recreateWindow();
+
+		// Instantiate the game object:
+		game = new Game();
+	}
+
+	private static void recreateWindow() {
+		// Destroy the old window, if one exists:
+		if (windowFrame != null) {
+			windowFrame.setVisible(false);
+		}
+
+		// Create the main render target:
+		bufferWidth = (int)Game.RESOLUTION.x;
+		bufferHeight = (int)Game.RESOLUTION.y;
 		bufferImage = new BufferedImage(bufferWidth, bufferHeight, BufferedImage.TYPE_INT_ARGB);
 		bufferGraphics = bufferImage.createGraphics();
 		bufferGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		bufferGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		windowImage = new BufferedImage(bufferWidth, bufferHeight, BufferedImage.TYPE_INT_ARGB);
+
+		// Create the screen render target:
+		int windowWidth, windowHeight;
+		if (fullscreen) {
+			DisplayMode displayMode = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
+			windowWidth = displayMode.getWidth();
+			windowHeight = displayMode.getHeight();
+		} else {
+			windowWidth = bufferWidth * Game.WINDOW_SCALE;
+			windowHeight = bufferHeight * Game.WINDOW_SCALE;
+		}
+		windowImage = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
 		windowGraphics = windowImage.createGraphics();
 
-		// Create a window using Swing:
+		// Create a new window:
 		windowLabel = new JLabel(new ImageIcon(windowImage));
 		windowLabel.addMouseListener(instance);
         windowLabel.addMouseMotionListener(instance);
@@ -71,15 +96,17 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 		windowFrame.setContentPane(windowLabel);
 		windowFrame.addKeyListener(instance);
 		windowFrame.setFocusTraversalKeysEnabled(false);
-		windowFrame.setResizable(true);
+		windowFrame.setResizable(false);
 		windowFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		windowFrame.setTitle(Game.TITLE);
+		windowFrame.setTitle(Game.WINDOW_TITLE);
+		if (fullscreen) {
+			windowFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+			windowFrame.setUndecorated(true);
+		}
 		windowFrame.pack();
-		windowFrame.requestFocusInWindow();
 		windowFrame.setVisible(true);
-
-		// Instantiate the game object:
-		game = new Game();
+		windowFrame.requestFocusInWindow();
+		windowFrame.setLocationRelativeTo(null);
 	}
 
 	private static void run() {
@@ -90,8 +117,14 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 			timeDelta = (frameStart - lastFrameStart) / 1000000000f;
 			lastFrameStart = frameStart;
 
-			// // Process pre-update engine logic:
+			// Process pre-update engine logic:
 			pollEvents();
+
+			// Toggle between windowed and fullscreen mode when Alt+Enter is pressed:
+			if (getKeyDown(Key.ENTER) && getKeyHeld(Key.ALT)) {
+				fullscreen = !fullscreen;
+				recreateWindow();
+			}
 
 			// Clear and start drawing into the render target:
 			bufferGraphics.setColor(Color.BLACK.color);
@@ -99,14 +132,6 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 
 			// Update game logic:
 			game.update();
-
-			// Resize the window image when the window frame is resized:
-			Dimension windowSize = windowFrame.getContentPane().getSize();
-			if (windowImage.getWidth() != windowSize.width || windowImage.getHeight() != windowSize.height) {
-				windowImage = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_ARGB);
-				windowGraphics = windowImage.createGraphics();
-				windowLabel.setIcon(new ImageIcon(windowImage));
-			}
 
 			// Figure out how to scale our render target to fill the window:
 			int windowImageWidth = windowImage.getWidth();

@@ -4,10 +4,11 @@ import engine.*;
 
 public class Game {
 
-	public static final String TITLE = "Minimalist Game Framework";
+	public static final String WINDOW_TITLE = "Minimalist Game Framework";
+    public static final int WINDOW_SCALE = 3;
 	public static final Vector2 RESOLUTION = new Vector2(128, 128);
 
-	// Define some constants controlling animation speed:
+    // Define some constants controlling animation speed:
     static final float FRAMERATE = 10;
     static final float WALKSPEED = 50;
 
