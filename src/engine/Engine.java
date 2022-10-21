@@ -498,7 +498,9 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 
     public void keyPressed(KeyEvent e) {
         synchronized (inputEvents) {
-            inputEvents.add(new InputEvent(InputEventType.KEY_DOWN, e.getKeyCode(), 0, 0));
+			if (!keysHeld.contains(e.getKeyCode())) {
+            	inputEvents.add(new InputEvent(InputEventType.KEY_DOWN, e.getKeyCode(), 0, 0));
+			}
         }
     }
 
