@@ -24,8 +24,6 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 	private static BufferedImage bufferImage, windowImage;
 	private static Graphics2D bufferGraphics, windowGraphics;
 	private static int bufferWidth, bufferHeight;
-	private static int windowFrameWidth, windowFrameHeight;
-	private static int windowFrameInitialWidth, windowFrameInitialHeight;
 	private static Vector2 scaledBufferSize = Vector2.zero;
 	private static Vector2 scaledBufferPos = Vector2.zero;
 	private static float timeDelta;
@@ -79,10 +77,6 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 		windowFrame.pack();
 		windowFrame.requestFocusInWindow();
 		windowFrame.setVisible(true);
-		windowFrameWidth = windowFrame.getWidth();
-		windowFrameHeight = windowFrame.getHeight();
-		windowFrameInitialWidth = windowFrameWidth;
-		windowFrameInitialHeight = windowFrameHeight;
 
 		// Instantiate the game object:
 		game = new Game();
@@ -107,14 +101,11 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 			game.update();
 
 			// Resize the window image when the window frame is resized:
-			if (windowFrame.getWidth() != windowFrameWidth || windowFrame.getHeight() != windowFrameHeight) {
-				int resizedWidth = bufferWidth + windowFrame.getWidth() - windowFrameInitialWidth;
-				int resizedHeight = bufferHeight + windowFrame.getHeight() - windowFrameInitialHeight;
-				windowImage = new BufferedImage(resizedWidth, resizedHeight, BufferedImage.TYPE_INT_ARGB);
+			Dimension windowSize = windowFrame.getContentPane().getSize();
+			if (windowImage.getWidth() != windowSize.width || windowImage.getHeight() != windowSize.height) {
+				windowImage = new BufferedImage(windowSize.width, windowSize.height, BufferedImage.TYPE_INT_ARGB);
 				windowGraphics = windowImage.createGraphics();
 				windowLabel.setIcon(new ImageIcon(windowImage));
-				windowFrameWidth = windowFrame.getWidth();
-				windowFrameHeight = windowFrame.getHeight();
 			}
 
 			// Figure out how to scale our render target to fill the window:
