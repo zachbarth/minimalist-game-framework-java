@@ -43,10 +43,10 @@ public class Game {
 		if (Engine.getKeyHeld(Key.DOWN)) {
 		    moveOffset = moveOffset.add(new Vector2(0, 1));
 		}
-		knightPosition = knightPosition.add(moveOffset.mul(WALKSPEED * Engine.timeDelta()));
+		knightPosition = knightPosition.add(moveOffset.mul(WALKSPEED * Engine.getTimeDelta()));
         
         // Advance through the knight's 6-frame animation and select the current frame:
-        knightFrameIndex = (knightFrameIndex + FRAMERATE * Engine.timeDelta()) % 6.0f;
+        knightFrameIndex = (knightFrameIndex + FRAMERATE * Engine.getTimeDelta()) % 6.0f;
         boolean knightIdle = moveOffset.length() == 0;
         Bounds2 knightFrameBounds = new Bounds2(((int)knightFrameIndex) * 16, knightIdle ? 0 : 16, 16, 16);
 

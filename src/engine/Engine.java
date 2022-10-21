@@ -142,7 +142,7 @@ public final class Engine implements KeyListener, MouseListener, MouseMotionList
 		}
 	}
 
-	public static float timeDelta() {
+	public static float getTimeDelta() {
 		return timeDelta;
 	}
 
